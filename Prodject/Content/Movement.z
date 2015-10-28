@@ -1,0 +1,43 @@
+class PlayerController : ZilchComponent
+{
+
+//THIS CODE REQUIRES THE ORIENTATION COMPONENT TO FUNCTION
+
+    [Property] var RotationSpeed : Real = 90.0;
+    [Property] var Speed : Real = 10;
+    
+    function Initialize(init : CogInitializer)
+    {
+        Zero.Connect(this.Space, Events.LogicUpdate, this.OnLogicUpdate);
+        Console.WriteLine(this.Owner.Transform.Rotation);
+    }
+
+    function OnLogicUpdate(event : UpdateEvent)
+    {
+        //Console.WriteLine(this.Owner.Transform.Rotation);
+        var rotation = this.Owner.Transform.EulerAngles.Z;
+        rotation = Math.ToDegrees(rotation);
+        if(Zero.Keyboard.KeyIsDown(Keys.A))
+        {
+            rotation += this.RotationSpeed * event.Dt;
+        }
+        if (Zero.Keyboard.KeyIsDown(Keys.D))
+        {
+            rotation -= this.RotationSpeed*event.Dt;
+        }
+        rotation = Math.ToRadians(rotation);
+        this.Owner.Transform.SetEulerAnglesXYZ(0,0,rotation);
+        
+            /////////////////////////
+    /////////////Forward Movement
+    
+        var forward = this.Owner.Orientation.WorldForward;
+        if(Zero.Keyboard.KeyIsDown(Keys.W))
+        {
+            this.Owner.Transform.Translation += this.Speed*forward * event.Dt;
+        }
+        //Console.WriteLine(event.Dt);
+    }
+
+}
+

@@ -1,0 +1,41 @@
+class GroundScript : ZilchComponent
+{
+    var Time : Real = 0;
+    var CollisionPersisted : Boolean = false;
+    function Initialize(init : CogInitializer)
+    {  
+    Zero.Connect(this.Owner, Events.CollisionStarted, this.OnCollisionStarted);
+        Zero.Connect(this.Owner, Events.CollisionPersisted, this.OnCollisionPersisted);
+            Zero.Connect(this.Space, Events.LogicUpdate, this.OnLogicUpdate);
+    }
+    
+    function OnLogicUpdate(event : UpdateEvent)
+    {
+        if(this.CollisionPersisted)
+        {
+            this.Time += event.Dt;
+        }
+    }
+
+    function OnCollisionStarted(event : CollisionEvent)
+    {
+        this.CollisionPersisted = true;
+        if(event.OtherObject.Name == "Player")
+        {
+            var temp = this.Space.FindObjectByName("Player").HealthScript.Health;
+            temp -=1;
+            this.Space.FindObjectByName("Player").HealthScript.Health = temp;
+        }
+    }
+    
+    function OnCollisionPersisted(event : CollisionEvent)
+    {
+    if(this.Time > 2)
+        {
+            var temp = this.Space.FindObjectByName("Player").HealthScript.Health;
+            temp -=1;
+            this.Space.FindObjectByName("Player").HealthScript.Health = temp;
+            this.Time = 0;
+        }
+    }
+}

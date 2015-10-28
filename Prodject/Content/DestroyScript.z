@@ -1,0 +1,33 @@
+class DestroyScript : ZilchComponent
+{
+    var Time : Real = -1;
+    [Property]
+    var Duration : Real = 4;
+    function Initialize(init : CogInitializer)
+    {
+        //Console.WriteLine("initialize: confirmed");
+        Zero.Connect(this.Space, Events.LogicUpdate, this.OnLogicUpdate);
+        Zero.Connect(this.Owner, Events.CollisionStarted, this.OnCollisionStarted);
+        
+    }
+
+    function OnLogicUpdate(event : UpdateEvent)
+    {
+        //Console.WriteLine("derp");
+        this.Time += event.Dt;
+        if(this.Time > this.Duration)
+        {
+            this.Owner.Destroy();
+        }
+    
+    }
+    function OnCollisionStarted(event : CollisionEvent)
+    {
+        //Console.WriteLine("collision");
+        if(event.OtherObject.Name != "Player")
+        if(event.OtherObject.ArchetypeName != "Sight")
+        {
+            this.Owner.Destroy();
+        }
+    }
+}

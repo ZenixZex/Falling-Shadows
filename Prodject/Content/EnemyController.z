@@ -1,0 +1,109 @@
+class EnemyController : ZilchComponent
+{
+ // Pacing Properties and variables
+[Property]
+var PaceSpeed: Real = 5.0;
+[Property]
+var MaxMoveDistance: Real = 10.0;
+var PaceDirection: Real3 = Real3(0.0, 1.0, 0.0);
+var StartPosition: Real3 = Real3();
+
+// Chasing Properties and variables
+[Property]
+var TargetObject: CogPath = null;
+  [Property]
+  var ChaseSpeed: Real = 5.0;
+var ChaseTriggerDistance: Real = 30.0;
+var DistanceFromTarget: Real = 0.0;
+var ChaseDirection: Real3 = Real3();
+var ChaseColor:Real4 = Real4(1.0, 0.0, 0.0, 1.0);
+var TargetIsWithinRange: Boolean = false;
+
+// Variables for smoothing state transitions
+var OriginalColor: Real4 = Real4();
+
+// Dependencies
+[Dependency]
+var Transform: Transform = null;
+[Dependency]
+var Sprite: Sprite = null;
+    
+    function Initialize(init : CogInitializer)
+    {
+        // We need to update the enemy's behavior every logic update
+        Zero.Connect(this.Space, Events.LogicUpdate, this.OnLogicUpdate);
+          // Have to know where we started to know how far we've moved
+            this.StartPosition = this.Owner.Transform.Translation;
+              this.OriginalColor = this.Owner.Sprite.Color;
+    }
+
+    function OnLogicUpdate(event : UpdateEvent)
+    {
+// Reevaluate the situation to determine if our object should pursue
+this.TargetIsWithinRange = false;
+
+// If our target exists
+if (this.TargetObject.Cog != null)
+        {
+    // Calculate the direction and distance of target
+    this.CalculateChaseDirectionAndDistance();
+    // Evaluate whether Ai should chase or pace
+    this.TargetIsWithinRange = (this.DistanceFromTarget <= this.ChaseTriggerDistance);
+
+    if (this.TargetIsWithinRange)
+            {
+      this.ChaseTarget(event);
+            }
+    else // If target not in range
+            {
+        // Pace back and forth
+        this.PaceBackAndForth(event);
+            }
+        }
+else // if there is no target, pace
+        {
+    // Logic for pacing back and forth
+    this.PaceBackAndForth(event);
+        }
+    }
+    
+    function CalculateChaseDirectionAndDistance()
+    {
+    // Get direction toward target
+    this.ChaseDirection = this.TargetObject.Cog.Transform.Translation - this.Owner.Transform.Translation;
+    // Extract distance by finding magnitude
+    this.DistanceFromTarget = Math.Length(this.ChaseDirection);
+    // Extract direction by normalizing
+    this.ChaseDirection = Math.Normalize(this.ChaseDirection);
+    }
+    
+    function ChaseTarget(event: UpdateEvent)
+    {
+    // Set Chase Color
+    this.Owner.Sprite.Color = this.ChaseColor;
+          // Apply movement
+      this.Owner.Transform.Translation += this.ChaseDirection * event.Dt * this.ChaseSpeed;
+    }
+
+    function PaceBackAndForth(event: UpdateEvent)
+    {
+              // Set pacing color
+      this.Owner.Sprite.Color = this.OriginalColor;
+          // Find out how far we've travelled from our start position
+  var displacement = this.Owner.Transform.Translation - this.StartPosition;
+  var distanceFromStart = Math.Length(displacement);
+
+  // If we have travelled past our max distance
+  if (distanceFromStart >= this.MaxMoveDistance)
+  {
+      // Change direction to go back the way we came
+      this.PaceDirection = -displacement;
+  }
+
+  // Ensure the PaceDirection is only a direction via normlization
+  this.PaceDirection = Math.Normalize(this.PaceDirection);
+        // Apply movement
+        this.Owner.Transform.Translation += this.PaceDirection * event.Dt * this.PaceSpeed;
+    }
+}
+
